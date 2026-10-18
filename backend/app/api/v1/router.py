@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from backend.app.api.v1.ai import router as ai_router
+from backend.app.api.v1.auth import router as auth_router
 from backend.app.api.v1.charts import router as charts_router
 from backend.app.api.v1.chat import router as chat_router
 from backend.app.api.v1.compatibility import router as compatibility_router
@@ -14,6 +15,7 @@ api_v1_router = APIRouter()
 
 # Mount health probes directly or under v1
 api_v1_router.include_router(health_router)
+api_v1_router.include_router(auth_router)
 api_v1_router.include_router(profiles_router)
 api_v1_router.include_router(charts_router)
 api_v1_router.include_router(ai_router)

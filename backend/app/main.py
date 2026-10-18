@@ -22,11 +22,13 @@ logger = logging.getLogger("astromind.app")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} in {settings.APP_ENV} mode")
-    if "sqlite" in settings.DATABASE_URL:
-        from backend.app.db.session import Base, engine
+    from backend.app.db.session import Base, engine
 
+    try:
         Base.metadata.create_all(bind=engine)
-        logger.info("Initialized local SQLite database schema")
+        logger.info("Synchronized database schema tables successfully")
+    except Exception as exc:
+        logger.error(f"Database schema auto-creation notice: {exc}")
     yield
     logger.info(f"Shutting down {settings.APP_NAME}")
 

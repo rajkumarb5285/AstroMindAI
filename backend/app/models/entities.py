@@ -35,6 +35,7 @@ class Profile(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     email = Column(String(255), unique=True, nullable=False, index=True)
     full_name = Column(String(255), nullable=True)
+    password_hash = Column(String(255), nullable=True)
     role = Column(String(50), nullable=False, default="user")  # 'user', 'admin'
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)

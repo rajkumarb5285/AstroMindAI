@@ -10,10 +10,10 @@ from backend.app.services.audit import AuditEventNames, AuditService, anonymize_
 
 
 @pytest.fixture(autouse=True)
-async def reset_limiter():
-    await rate_limiter.reset()
+def reset_limiter():
+    rate_limiter._history.clear()
     yield
-    await rate_limiter.reset()
+    rate_limiter._history.clear()
 
 
 def test_rate_limiting_enforcement_and_headers(client: TestClient):
