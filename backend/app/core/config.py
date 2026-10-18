@@ -37,9 +37,10 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str = "dev-service-role-key-placeholder"
 
     # AI Configuration (Server-Side)
-    LLM_PROVIDER: str = "openai"
+    LLM_PROVIDER: str = "groq"
     LLM_API_KEY: str = "dummy-key-for-dev"
-    LLM_MODEL: str = "gpt-4o-mini"
+    LLM_MODEL: str = "openai/gpt-oss-120b"
+    GROQ_API_BASE: str = "https://api.groq.com/openai/v1"
     LLM_MAX_OUTPUT_TOKENS: int = 1500
     LLM_TIMEOUT_SECONDS: int = 30
     LLM_DAILY_BUDGET_USD: float = 10.0
@@ -53,9 +54,13 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     WORKER_QUEUE_NAME: str = "astromind-jobs"
 
-    # Storage
-    REPORT_STORAGE_PROVIDER: str = "local"
-    REPORT_BUCKET: str = "astromind-private-reports"
+    # Storage (Local or AWS S3)
+    REPORT_STORAGE_PROVIDER: str = "local"  # 'local' or 's3'
+    REPORT_BUCKET: str = "astro-mind-ai"
+    AWS_ACCESS_KEY_ID: str | None = None
+    AWS_SECRET_ACCESS_KEY: str | None = None
+    AWS_REGION: str = "ap-south-1"
+    S3_BUCKET_NAME: str = "astro-mind-ai"
     SIGNED_URL_TTL_SECONDS: int = 300
 
     # Vedic Astrology Engine

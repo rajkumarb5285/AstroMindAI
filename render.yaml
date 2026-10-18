@@ -1,0 +1,59 @@
+# ==============================================================================
+# AstroMind AI - Render Blueprint Specification (render.yaml)
+# Deploy Backend API & PostgreSQL Database to Render
+# ==============================================================================
+
+services:
+  - type: web
+    name: astromind-backend
+    runtime: python
+    region: frankfurt  # or oregon / singapore
+    plan: starter
+    buildCommand: "pip install --upgrade pip && pip install -e ./backend"
+    startCommand: "uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 2"
+    healthCheckPath: /health/live
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_NAME
+        value: "AstroMind AI"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DATABASE_URL
+        fromDatabase:
+          name: astromind-db
+          property: connectionString
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://astromind-frontend.vercel.app,http://localhost:3000"
+      - key: RATE_LIMIT_ENABLED
+        value: "true"
+      - key: LLM_PROVIDER
+        value: groq
+      - key: LLM_MODEL
+        value: openai/gpt-oss-120b
+      - key: GROQ_API_BASE
+        value: https://api.groq.com/openai/v1
+      - key: LLM_API_KEY
+        sync: false  # Set securely in Render dashboard
+      - key: REPORT_STORAGE_PROVIDER
+        value: s3
+      - key: S3_BUCKET_NAME
+        value: astro-mind-ai
+      - key: AWS_REGION
+        value: ap-south-1
+      - key: AWS_ACCESS_KEY_ID
+        sync: false  # Set securely in Render dashboard
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false  # Set securely in Render dashboard
+      - key: ASTROLOGY_ENGINE
+        value: pyswisseph
+      - key: ASTROLOGY_AYANAMSA
+        value: lahiri
+
+databases:
+  - name: astromind-db
+    region: frankfurt
+    plan: starter
+    databaseName: astromind
+    user: astromind

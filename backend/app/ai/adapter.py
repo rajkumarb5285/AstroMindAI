@@ -150,14 +150,22 @@ class MockLLMProvider(LLMProviderInterface):
         )
 
 
-class OpenAILLMProvider(LLMProviderInterface):
+class OpenAICompatibleProvider(LLMProviderInterface):
     """
-    OpenAI API Provider with strict timeouts, structured tool calling, and error containment.
+    OpenAI-compatible API Provider supporting Groq, OpenAI, and other standard endpoints
+    with strict timeouts, structured tool calling, and error containment.
     """
 
-    def __init__(self, api_key: str, model: str = "gpt-4o-mini", timeout: int = 30):
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "llama-3.3-70b-versatile",
+        base_url: str = "https://api.groq.com/openai/v1",
+        timeout: int = 30,
+    ):
         self.api_key = api_key
         self.model = model
+        self.base_url = base_url.rstrip("/")
         self.timeout = timeout
 
     def generate(
@@ -168,7 +176,7 @@ class OpenAILLMProvider(LLMProviderInterface):
         import httpx
 
         headers = {
-            "Authorization": "Bearer self.api_key",
+            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
         payload: dict[str, Any] = {
@@ -192,8 +200,9 @@ class OpenAILLMProvider(LLMProviderInterface):
             ]
 
         try:
+            endpoint = f"{self.base_url}/chat/completions"
             with httpx.Client(timeout=self.timeout) as client:
-                res = client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+                res = client.post(endpoint, headers=headers, json=payload)
                 res.raise_for_status()
                 data = res.json()
 
@@ -213,13 +222,34 @@ class OpenAILLMProvider(LLMProviderInterface):
                 completion_tokens=data.get("usage", {}).get("completion_tokens", 0),
             )
         except Exception as e:
-            logger.error(f"OpenAI completion error: {e}")
+            logger.error(f"LLM API completion error: {e}")
             raise RuntimeError(f"AI Provider execution failed: {e}") from e
 
 
 def get_llm_provider() -> LLMProviderInterface:
-    """Factory returning the active LLM provider."""
-    # If dummy key or development mode, use robust deterministic Mock provider
-    if settings.LLM_API_KEY in ("dummy-key-for-dev", "PLACEHOLDER_LLM_KEY", "") or settings.APP_ENV == "development":
+    """Factory returning the active LLM provider (Groq, OpenAI, or Mock)."""
+    import os
+    import sys
+
+    # In test environment / pytest execution, always use the deterministic MockLLMProvider
+    if "pytest" in sys.modules or os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("TESTING") == "1" or settings.APP_ENV == "test":
         return MockLLMProvider()
-    return OpenAILLMProvider(api_key=settings.LLM_API_KEY, model=settings.LLM_MODEL)
+
+    api_key = settings.LLM_API_KEY
+    if not api_key or api_key in ("dummy-key-for-dev", "PLACEHOLDER_LLM_KEY"):
+        return MockLLMProvider()
+
+    if settings.LLM_PROVIDER == "groq" or api_key.startswith("gsk_"):
+        return OpenAICompatibleProvider(
+            api_key=api_key,
+            model=settings.LLM_MODEL or "openai/gpt-oss-120b",
+            base_url=settings.GROQ_API_BASE,
+            timeout=settings.LLM_TIMEOUT_SECONDS,
+        )
+
+    return OpenAICompatibleProvider(
+        api_key=api_key,
+        model=settings.LLM_MODEL or "gpt-4o-mini",
+        base_url="https://api.openai.com/v1",
+        timeout=settings.LLM_TIMEOUT_SECONDS,
+    )

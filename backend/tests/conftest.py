@@ -1,4 +1,8 @@
+import os
 from collections.abc import Generator
+
+os.environ["APP_ENV"] = "test"
+os.environ["TESTING"] = "1"
 
 import pytest
 from sqlalchemy import create_engine
