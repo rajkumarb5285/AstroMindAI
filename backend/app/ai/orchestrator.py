@@ -43,110 +43,101 @@ class AIInterpretationOrchestrator:
     def interpret(self, chart_id: str, question: str) -> InterpretationResponse:
         """
         Executes a bounded, source-grounded consultation query for an authorized chart.
+        Pre-fetches verified astronomical calculations and classical rules to enable
+        the AI to respond as an empathetic, 30+ year veteran Jyotish Acharya.
         """
-        # Prepare system and user messages
-        messages: list[dict[str, Any]] = [
-            {"role": "system", "content": ASTROMIND_SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": f"Target chart_id: {chart_id}\n\nUser Question: {question}",
-            },
-        ]
-
-        tools_specs = [
-            {
-                "name": t.name,
-                "description": t.description,
-                "parameters": t.parameters,
-            }
-            for t in AVAILABLE_TOOLS
-        ]
-
-        turns = 0
-        total_tokens = 0
-        tools_called: list[str] = []
         retrieved_citations: list[dict[str, str]] = []
+        tools_called: list[str] = []
 
-        while turns < self.MAX_TOOL_TURNS:
-            turns += 1
-            response = self.provider.generate(messages=messages, tools=tools_specs)
-            total_tokens += response.prompt_tokens + response.completion_tokens
+        # 1. Pre-fetch verified astronomical chart facts & classical rules from database
+        try:
+            facts = self.executor.execute_tool("get_chart_facts", {"chart_id": chart_id})
+            tools_called.append("get_chart_facts")
+        except Exception as err:
+            logger.warning(f"Error fetching chart facts for {chart_id}: {err}")
+            facts = {}
 
-            # 1. If tool calls requested, execute them with security bounds
-            if response.tool_calls:
-                # Append assistant tool call request message
-                messages.append(
+        try:
+            rules = self.executor.execute_tool("evaluate_astrology_rules", {"chart_id": chart_id, "category": "all"})
+            tools_called.append("evaluate_astrology_rules")
+        except Exception as err:
+            logger.warning(f"Error evaluating rules for {chart_id}: {err}")
+            rules = {}
+
+        try:
+            knowledge = self.executor.execute_tool("search_vedic_knowledge", {"query": question, "top_k": 3})
+            tools_called.append("search_vedic_knowledge")
+            for item in knowledge.get("citations", []):
+                retrieved_citations.append(
                     {
-                        "role": "assistant",
-                        "content": response.content,
-                        "tool_calls": [
-                            {
-                                "id": tc.id,
-                                "type": "function",
-                                "function": {
-                                    "name": tc.name,
-                                    "arguments": json.dumps(tc.arguments),
-                                },
-                            }
-                            for tc in response.tool_calls
-                        ],
+                        "citation": item.get("citation", ""),
+                        "topic": item.get("topic", ""),
+                        "content": item.get("content", ""),
+                        "chunk_id": item.get("chunk_id", ""),
                     }
                 )
+        except Exception as err:
+            logger.warning(f"Error searching knowledge for {question}: {err}")
 
-                # Execute each tool through SecureAIToolExecutor
-                for tc in response.tool_calls:
-                    tools_called.append(tc.name)
-                    try:
-                        # Security enforcement: override or enforce chart_id strictly
-                        args = dict(tc.arguments)
-                        if "chart_id" in args:
-                            args["chart_id"] = chart_id
+        # 2. Extract structured astrological significations
+        asc = facts.get("ascendant", {})
+        asc_sign = asc.get("sign", "Aries")
+        asc_deg = asc.get("degree", 0.0)
+        planets = facts.get("planets", [])
+        yogas = rules.get("yogas", [])
 
-                        tool_output = self.executor.execute_tool(tc.name, args)
+        # Identify key house occupants
+        h7_planets = [f"{p['planet']} ({p['sign']})" for p in planets if p.get("house") == 7]
+        h10_planets = [f"{p['planet']} ({p['sign']})" for p in planets if p.get("house") == 10]
+        h1_planets = [f"{p['planet']} ({p['sign']})" for p in planets if p.get("house") == 1]
 
-                        # Track citations
-                        if tc.name == "search_vedic_knowledge":
-                            for item in tool_output.get("citations", []):
-                                retrieved_citations.append(
-                                    {
-                                        "citation": item.get("citation", ""),
-                                        "topic": item.get("topic", ""),
-                                        "content": item.get("content", ""),
-                                        "chunk_id": item.get("chunk_id", ""),
-                                    }
-                                )
+        # Format clean, human-readable verified astrological context
+        planet_lines = [
+            f"  * {p['planet']}: in {p['sign']} (House {p['house']}, {p.get('degree', 0.0):.1f}°, {'Retrograde' if p.get('is_retrograde') else 'Direct'})"
+            for p in planets
+        ]
+        yoga_names = [y.get("name", "") for y in yogas]
 
-                        output_str = json.dumps(tool_output)
-                    except Exception as err:
-                        logger.warning(f"Tool execution error for {tc.name}: {err}")
-                        output_str = json.dumps({"error": str(err)})
+        scripture_excerpts = [
+            f"- [{c['citation']}] {c['content'][:280]}..."
+            for c in retrieved_citations[:2]
+        ]
 
-                    messages.append(
-                        {
-                            "role": "tool",
-                            "name": tc.name,
-                            "tool_call_id": tc.id,
-                            "content": output_str,
-                        }
-                    )
-            else:
-                # 2. Final response generated
-                final_text = response.content or "No response could be generated."
-                if DISCLAIMER_TEXT not in final_text:
-                    final_text += f"\n\n*{DISCLAIMER_TEXT}*"
+        prompt_body = f"""Client's Life Inquiry: "{question}"
 
-                return InterpretationResponse(
-                    interpretation=final_text,
-                    citations=retrieved_citations,
-                    chart_id=chart_id,
-                    tokens_used=total_tokens,
-                    tools_called=tools_called,
-                    disclaimer=DISCLAIMER_TEXT,
-                )
+Verified Astronomical Calculations (Chart ID: {chart_id}):
+- Ascendant (Lagna): {asc_sign} ({asc_deg:.1f}°)
+- Planetary Placements:
+{chr(10).join(planet_lines)}
+- 1st House (Self & Vitality): {'Occupied by ' + ', '.join(h1_planets) if h1_planets else 'Governed by Lagna Lord'}
+- 7th House (Marriage & Partnership): {'Occupied by ' + ', '.join(h7_planets) if h7_planets else 'No occupying planets, governed by 7th Lord'}
+- 10th House (Career, Karma & Status): {'Occupied by ' + ', '.join(h10_planets) if h10_planets else 'Governed by 10th Lord'}
+- Classical Yogas Detected: {', '.join(yoga_names) if yoga_names else 'Standard auspicious planetary combinations'}
 
-        # Fallback if loop exceeded
+Classical Vedic Wisdom from Shastras:
+{chr(10).join(scripture_excerpts) if scripture_excerpts else '- Classical Parashari Jyotish guidelines apply.'}
+
+As Acharya Shastri (30+ years experience), answer this client with warmth, directness, and compassion:
+1. Address the question directly first in easy-to-understand human language. If marriage/career, pinpoint the favorable timing windows clearly.
+2. Explain partner/career traits in simple, engaging terms (no raw decimals or technical confusion).
+3. Provide 2-3 practical, authentic Vedic remedies (Upayas) to remove obstacles and bring peace.
+"""
+
+        messages: list[dict[str, Any]] = [
+            {"role": "system", "content": ASTROMIND_SYSTEM_PROMPT},
+            {"role": "user", "content": prompt_body},
+        ]
+
+        # Call active LLM Provider
+        response = self.provider.generate(messages=messages)
+        total_tokens = response.prompt_tokens + response.completion_tokens
+
+        final_text = response.content or "No response could be generated."
+        if DISCLAIMER_TEXT not in final_text:
+            final_text += f"\n\n*{DISCLAIMER_TEXT}*"
+
         return InterpretationResponse(
-            interpretation=f"Analysis completed with primary placements.\n\n*{DISCLAIMER_TEXT}*",
+            interpretation=final_text,
             citations=retrieved_citations,
             chart_id=chart_id,
             tokens_used=total_tokens,

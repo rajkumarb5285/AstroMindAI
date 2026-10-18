@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #070913;
+  --background: #08090C;
   --foreground: #F8FAFC;
 }
 
@@ -11,35 +11,58 @@ body {
   color: var(--foreground);
   background: var(--background);
   min-height: 100vh;
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow-x: hidden;
+  letter-spacing: -0.011em;
 }
 
-/* Cosmic celestial ambient glow */
-.cosmic-gradient {
-  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, rgba(7, 9, 19, 0) 70%),
-              radial-gradient(circle at 80% 20%, rgba(234, 179, 8, 0.08) 0%, rgba(7, 9, 19, 0) 50%);
+/* Apple-style Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
 }
 
-/* Glassmorphism panel */
-.glass-panel {
-  background: rgba(15, 18, 34, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* Subtle Apple Atmospheric Radial Glow */
+.apple-glow {
+  background: radial-gradient(circle at 50% -10%, rgba(245, 158, 11, 0.07) 0%, rgba(8, 9, 12, 0) 65%);
+}
+
+/* Apple Frosted Glass Utilities */
+.apple-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.glass-panel-gold {
-  background: rgba(21, 25, 48, 0.85);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(234, 179, 8, 0.2);
+.apple-glass-card {
+  background: rgba(14, 16, 23, 0.85);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
 }
 
-/* Gold glow text and borders */
+.apple-glass-gold {
+  background: rgba(24, 20, 14, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  box-shadow: 0 10px 30px -10px rgba(245, 158, 11, 0.1);
+}
+
+/* Typography Enhancements */
 .text-gold-glow {
-  text-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+  text-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
 }
 
-.border-gold-glow {
-  box-shadow: 0 0 15px rgba(234, 179, 8, 0.15);
-}

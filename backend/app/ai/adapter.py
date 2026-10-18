@@ -111,42 +111,84 @@ class MockLLMProvider(LLMProviderInterface):
         planets = facts.get("planets", [])
         yogas = rules.get("yogas", [])
 
-        # Build grounded response
-        yoga_summary = (
-            f"Classical Yogas Identified: {', '.join([y['name'] for y in yogas])}."
-            if yogas
-            else "No prominent classical yogas detected in primary angular placements."
-        )
+        # Determine query nature for human-friendly Acharya consultation
+        user_q = user_content.lower()
+        
+        is_marriage = any(k in user_q for k in ("marr", "spouse", "partner", "wife", "husband", "wedding", "relationship"))
+        is_career = any(k in user_q for k in ("career", "job", "profession", "business", "work", "money", "wealth", "financ"))
+        
+        # 7th house and 10th house occupants
+        h7_p = [p['planet'] for p in planets if p.get('house') == 7]
+        h10_p = [p['planet'] for p in planets if p.get('house') == 10]
 
-        citation_line = (
-            f"Scriptural Citations: {', '.join(citations_used[:2])}."
-            if citations_used
-            else "Scriptural Citations: Brihat Parashara Hora Shastra, Chapter 11; Phaladeepika, Chapter 6."
-        )
-
-        planets_summary = ", ".join([f"{p['planet']} in {p['sign']} (House {p['house']})" for p in planets[:4]])
-
-        final_text = (
-            f"### Vedic Chart Analysis\n\n"
-            f"**Verified Astronomical Placements:**\n"
-            f"- **Ascendant (Lagna):** {asc_sign} ({asc.get('degree', 0.0)}°)\n"
-            f"- **Key Planetary Placements:** {planets_summary}\n\n"
-            f"**Classical Interpretations & Yogas:**\n"
-            f"{yoga_summary}\n\n"
-            f"**Scriptural References:**\n"
-            f"{citation_line}\n\n"
-            f"**Synthesis:**\n"
-            f"The native's chart shows an analytical orientation with emphasis on ethical dharma and purposeful action. "
-            f"Planetary significations should be integrated into conscious personal development.\n\n"
-            f"*{DISCLAIMER_TEXT}*"
-        )
+        if is_marriage:
+            final_text = (
+                f"**Namaste and Divine Blessings.**\n\n"
+                f"As an experienced Jyotish Acharya, I have examined your birth chart with great care to understand the cosmic promises for your marriage and partnership.\n\n"
+                f"### 🌟 1. Auspicious Marriage Timing & Golden Window\n"
+                f"- **Most Favorable Timeline:** Your planetary configurations indicate a prime, highly auspicious window for marriage **between Late 2026 and Mid 2028**.\n"
+                f"- **Astrological Trigger:** During this phase, transiting Jupiter casts its divine benefic aspect upon your 7th House (Kalatra Bhava) and your Venus/Mars axis, harmonizing family agreements and mutual attraction.\n\n"
+                f"### 💍 2. Qualities & Nature of Your Life Partner\n"
+                f"- **Personality:** Your partner will be emotionally deep, loyal, principled, and deeply supportive of your personal growth.\n"
+                f"- **Intellect & Background:** They possess a mature, reflective nature with creative appreciation, bringing stability and comfort into your household.\n"
+                f"- **Relationship Dynamic:** Mutual respect and open communication will be the cornerstone of your marital happiness.\n\n"
+                f"### 🪐 3. Key Astrological Placements Examined\n"
+                f"- **Ascendant (Lagna):** {asc_sign} ({asc.get('degree', 0.0):.1f}°)\n"
+                f"- **7th House of Union:** {'Influenced by ' + ', '.join(h7_p) if h7_p else 'Under benefic protection of the 7th lord'}\n"
+                f"- **Classical Yogas:** {yoga_summary}\n"
+                f"- **Scriptural Authority:** {citation_line}\n\n"
+                f"### 🌿 4. Authentic Vedic Remedies (Upayas) for Harmony\n"
+                f"1. **Shukra & Shiva-Parvati Blessing:** Recite *'Om Namah Shivaya'* daily for 11 minutes or *'Om Shum Shukraya Namaha'* on Friday mornings to enhance love and remove delays.\n"
+                f"2. **Friday Compassion:** Offer milk, white sweets, or feed cows on Fridays to strengthen the auspicious energy of Venus.\n"
+                f"3. **Mindset & Purity:** Practice gentle patience; clear away past emotional grievances to welcome your partner with an open heart.\n\n"
+                f"May the planetary deities bless your life path with abundant love, peace, and companionship.\n\n"
+                f"*{DISCLAIMER_TEXT}*"
+            )
+        elif is_career:
+            final_text = (
+                f"**Namaste and Divine Blessings.**\n\n"
+                f"I have examined your 10th House of Karma (Profession) and supporting planetary forces to guide your career path with clarity.\n\n"
+                f"### 🌟 1. Career Horizon & Favorable Breakthrough Periods\n"
+                f"- **Favorable Growth Window:** The cosmic cycles indicate strong professional advancement and recognition over the **next 12 to 18 months**.\n"
+                f"- **Key Strength:** Your chart indicates strong strategic intelligence, organizational mastery, and an innate ability to lead complex initiatives.\n\n"
+                f"### 💼 2. Recommended Fields & Orientation\n"
+                f"- **Domain Affinity:** Leadership roles in technology, analytics, management, consulting, or purposeful entrepreneurship are exceptionally favorable.\n"
+                f"- **Business vs. Service:** While you perform well in structured organizations, long-term independent enterprise or executive advisory brings maximum financial fulfillment.\n\n"
+                f"### 🪐 3. Astrological Foundation\n"
+                f"- **Ascendant (Lagna):** {asc_sign} ({asc.get('degree', 0.0):.1f}°)\n"
+                f"- **10th House (Karma Bhava):** {'Active placement of ' + ', '.join(h10_p) if h10_p else 'Strongly aligned with your life purpose'}\n"
+                f"- **Classical Yogas:** {yoga_summary}\n"
+                f"- **Scriptural Reference:** {citation_line}\n\n"
+                f"### 🌿 4. Vedic Remedies for Career & Wealth (Artha)\n"
+                f"1. **Surya Arghya:** Offer water to the rising Sun every morning reciting the *Gayatri Mantra* or *'Om Suryaya Namaha'* for authority, vitality, and respect.\n"
+                f"2. **Thursday Charity:** Donate yellow grains, bananas, or books to students on Thursdays to invoke Jupiter's wisdom and abundance.\n\n"
+                f"May your righteous endeavors yield fruitful and lasting success.\n\n"
+                f"*{DISCLAIMER_TEXT}*"
+            )
+        else:
+            final_text = (
+                f"**Namaste and Divine Blessings.**\n\n"
+                f"### 🌟 1. Core Consultation Guidance\n"
+                f"Based on your verified Vedic chart placements, your life journey reflects strong spiritual discernment, principled ambition, and protective celestial yogas.\n"
+                f"Your innate strengths allow you to overcome temporary obstacles and turn challenges into stepping stones for profound self-realization.\n\n"
+                f"### 🪐 2. Planetary Placements & Classical Yogas\n"
+                f"- **Ascendant (Lagna):** {asc_sign} ({asc.get('degree', 0.0):.1f}°) — Governs your vitality and foundational destiny.\n"
+                f"- **Key Planetary Placements:** {planets_summary}\n"
+                f"- **Classical Yogas Present:** {yoga_summary}\n"
+                f"- **Scriptural Authority:** {citation_line}\n\n"
+                f"### 🌿 3. Practical Vedic Remedies (Upayas)\n"
+                f"1. **Universal Harmony Mantra:** Chant *'Om Namah Shivaya'* or *'Maha Mrityunjaya Mantra'* 11 times every morning to maintain peace and mental clarity.\n"
+                f"2. **Acts of Kindness:** Practice regular charity—feeding birds, helping elders, or sharing food with the needy—to neutralize negative karmic debts.\n\n"
+                f"Wishing you auspicious growth, radiant health, and divine protection.\n\n"
+                f"*{DISCLAIMER_TEXT}*"
+            )
 
         return LLMResponse(
             content=final_text,
             tool_calls=[],
             finish_reason="stop",
             prompt_tokens=320,
-            completion_tokens=210,
+            completion_tokens=420,
         )
 
 
