@@ -39,9 +39,9 @@ class Settings(BaseSettings):
     # AI Configuration (Server-Side)
     LLM_PROVIDER: str = "groq"
     LLM_API_KEY: str = "dummy-key-for-dev"
-    LLM_MODEL: str = "openai/gpt-oss-120b"
+    LLM_MODEL: str = "openai/gpt-oss-20b"
     GROQ_API_BASE: str = "https://api.groq.com/openai/v1"
-    LLM_MAX_OUTPUT_TOKENS: int = 1500
+    LLM_MAX_OUTPUT_TOKENS: int = 1200
     LLM_TIMEOUT_SECONDS: int = 30
     LLM_DAILY_BUDGET_USD: float = 10.0
 

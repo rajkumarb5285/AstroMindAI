@@ -48,10 +48,13 @@ class MockLLMProvider(LLMProviderInterface):
     ) -> LLMResponse:
         # Check if the last message is a tool response
         last_msg = messages[-1] if messages else {}
+        user_content = ""
+        for m in messages:
+            if m.get("role") == "user":
+                user_content = str(m.get("content", ""))
 
-        # 1. If last message is a user message, determine what tools are needed
-        if last_msg.get("role") == "user":
-            user_content = str(last_msg.get("content", ""))
+        # 1. If last message is a user message and tools were requested, return initial tool calls
+        if last_msg.get("role") == "user" and tools:
 
             # Extract chart_id if present in context or messages
             chart_id = "test-chart-id"
@@ -120,6 +123,10 @@ class MockLLMProvider(LLMProviderInterface):
         # 7th house and 10th house occupants
         h7_p = [p['planet'] for p in planets if p.get('house') == 7]
         h10_p = [p['planet'] for p in planets if p.get('house') == 10]
+
+        yoga_summary = ", ".join(y.get("name", "") for y in yogas) or "Budhaditya Yoga, Gaja Kesari Yoga"
+        citation_line = ", ".join(citations_used) if citations_used else "Brihat Parashara Hora Shastra, Chapter 11; Phaladeepika, Chapter 6"
+        planets_summary = ", ".join(f"{p['planet']} in {p['sign']}" for p in planets[:4]) if planets else "Sun in Aquarius, Moon in Capricorn, Mars in Pisces"
 
         if is_marriage:
             final_text = (
@@ -227,6 +234,8 @@ class OpenAICompatibleProvider(LLMProviderInterface):
             "max_tokens": settings.LLM_MAX_OUTPUT_TOKENS,
             "temperature": 0.2,  # Low temperature for factual consistency
         }
+        if any(rm in self.model for rm in ("gpt-oss", "o1", "o3")):
+            payload["reasoning_effort"] = "low"
 
         if tools:
             payload["tools"] = [
