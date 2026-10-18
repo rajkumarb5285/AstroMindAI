@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #070913;
+  --foreground: #F8FAFC;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  min-height: 100vh;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Cosmic celestial ambient glow */
+.cosmic-gradient {
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, rgba(7, 9, 19, 0) 70%),
+              radial-gradient(circle at 80% 20%, rgba(234, 179, 8, 0.08) 0%, rgba(7, 9, 19, 0) 50%);
+}
+
+/* Glassmorphism panel */
+.glass-panel {
+  background: rgba(15, 18, 34, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-gold {
+  background: rgba(21, 25, 48, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+}
+
+/* Gold glow text and borders */
+.text-gold-glow {
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+}
+
+.border-gold-glow {
+  box-shadow: 0 0 15px rgba(234, 179, 8, 0.15);
+}

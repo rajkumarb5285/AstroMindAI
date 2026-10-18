@@ -1,0 +1,59 @@
+# Copy to a local .env file; NEVER commit actual credentials.
+# Use separate values per environment and a secret manager in production.
+
+APP_ENV=development
+APP_NAME=AstroMind AI
+APP_BASE_URL=http://localhost:3000
+API_BASE_URL=http://localhost:8000
+LOG_LEVEL=INFO
+
+# Authentication / Supabase — placeholders only
+SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+SUPABASE_ANON_KEY=REPLACE_WITH_PUBLIC_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY=SERVER_ONLY_SECRET_DO_NOT_EXPOSE
+DATABASE_URL=postgresql+psycopg://USER:PASSWORD@HOST:5432/DBNAME
+
+# AI provider — choose one adapter; never expose this to the browser
+LLM_PROVIDER=REPLACE_ME
+LLM_API_KEY=SERVER_SIDE_SECRET
+LLM_MODEL=REPLACE_WITH_SUPPORTED_MODEL
+LLM_MAX_OUTPUT_TOKENS=1200
+LLM_TIMEOUT_SECONDS=30
+LLM_DAILY_BUDGET_USD=REVIEW_AND_SET
+
+# Embeddings must match pgvector dimensions
+EMBEDDING_PROVIDER=REPLACE_ME
+EMBEDDING_MODEL=REPLACE_ME
+EMBEDDING_DIMENSIONS=REPLACE_WITH_MODEL_DIMENSION
+
+# Optional cache/worker
+REDIS_URL=redis://PRIVATE_HOST:6379/0
+WORKER_QUEUE_NAME=astromind-jobs
+
+# Private storage
+REPORT_STORAGE_PROVIDER=REPLACE_ME
+REPORT_BUCKET=astromind-private-reports
+SIGNED_URL_TTL_SECONDS=300
+
+# Security controls
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+RATE_LIMIT_PER_MINUTE=30
+MAX_REQUEST_BODY_BYTES=1048576
+MAX_CHAT_INPUT_CHARS=8000
+MAX_TOOL_CALLS_PER_TURN=5
+
+# Astrology configuration
+ASTROLOGY_ENGINE=REPLACE_WITH_LICENSED_ENGINE
+ASTROLOGY_ENGINE_VERSION=PINNED_VERSION
+ASTROLOGY_CONFIG_VERSION=vedic-v1
+ASTROLOGY_AYANAMSA=lahiri
+ASTROLOGY_NODE_MODE=mean
+
+# Observability; configure only if approved
+ERROR_TRACKING_DSN=
+OTEL_EXPORTER_OTLP_ENDPOINT=
+
+# IMPORTANT:
+# - Never put service-role keys, DB credentials, or LLM keys in NEXT_PUBLIC_* variables.
+# - Never print environment values in diagnostics.
+# - Validate required variables on startup without logging their values.
