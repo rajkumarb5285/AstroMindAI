@@ -1,0 +1,48 @@
+# Illustrative GitHub Actions workflow. Review, pin third-party actions to
+# immutable commit SHAs, and adapt to your repository before enabling.
+name: quality-and-security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Frontend lint and typecheck
+        run: |
+          npm run lint --if-present
+          npm run typecheck --if-present
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f backend/pyproject.toml ]; then pip install -e "backend[dev]"; fi
+      - name: Python tests
+        run: |
+          if [ -d tests ]; then pytest -q; else echo "No tests directory; review required"; fi
+      - name: Dependency audit
+        run: |
+          npm audit --audit-level=high
+          python -m pip install pip-audit
+          pip-audit || true
+      # Do not pass production secrets to untrusted pull request jobs.
+      # Add secret scanning, SAST, container scanning and pinned actions.
+      # Do not deploy from this workflow; use a protected release environment.

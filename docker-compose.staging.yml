@@ -1,0 +1,113 @@
+# ==============================================================================
+# AstroMind AI - Staging Multi-Container Orchestration
+# Isolated Network, Health Checks, Non-Root Execution, Resource Limits
+# ==============================================================================
+
+version: "3.8"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: astromind-staging-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword_staging
+      POSTGRES_DB: astromind_staging
+    ports:
+      - "127.0.0.1:5432:5432" # Bind strictly to localhost
+    volumes:
+      - staging-postgres-data:/var/lib/postgresql/data
+    networks:
+      - astromind-staging-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d astromind_staging"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+
+  redis:
+    image: redis:7-alpine
+    container_name: astromind-staging-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379" # Bind strictly to localhost
+    volumes:
+      - staging-redis-data:/data
+    networks:
+      - astromind-staging-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: astromind-staging-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: staging
+      APP_NAME: "AstroMind AI (Staging)"
+      DATABASE_URL: "postgresql+psycopg://postgres:postgrespassword_staging@postgres:5432/astromind_staging"
+      REDIS_URL: "redis://redis:6379/0"
+      CORS_ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      RATE_LIMIT_ENABLED: "true"
+      LOG_LEVEL: "INFO"
+      ASTROLOGY_ENGINE: "pyswisseph"
+      ASTROLOGY_AYANAMSA: "lahiri"
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks:
+      - astromind-staging-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1024M
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: astromind-staging-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: "http://127.0.0.1:8000"
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - astromind-staging-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+networks:
+  astromind-staging-net:
+    driver: bridge
+
+volumes:
+  staging-postgres-data:
+  staging-redis-data:

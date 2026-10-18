@@ -1,0 +1,33 @@
+from backend.app.models.entities import (
+    AstrologyRule,
+    AuditEvent,
+    BirthProfile,
+    ChartCalculation,
+    ChatToolRun,
+    ConsentRecord,
+    Conversation,
+    KnowledgeChunk,
+    KnowledgeSource,
+    Message,
+    Profile,
+    Report,
+    Subscription,
+    UsageEvent,
+)
+
+__all__ = [
+    "Profile",
+    "BirthProfile",
+    "ChartCalculation",
+    "Conversation",
+    "Message",
+    "ChatToolRun",
+    "KnowledgeSource",
+    "KnowledgeChunk",
+    "AstrologyRule",
+    "Report",
+    "Subscription",
+    "UsageEvent",
+    "ConsentRecord",
+    "AuditEvent",
+]
