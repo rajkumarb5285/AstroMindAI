@@ -85,7 +85,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 content={
                     "error": {
                         "code": "INTERNAL_SERVER_ERROR",
-                        "message": ("An unexpected server error occurred. Please reference the request ID."),
+                        "message": str(exc),
                         "request_id": request_id,
                     }
                 },

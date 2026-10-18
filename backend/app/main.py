@@ -22,13 +22,21 @@ logger = logging.getLogger("astromind.app")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} in {settings.APP_ENV} mode")
+    from sqlalchemy import text
+    import backend.app.models.entities  # Ensures all ORM models are registered with Base.metadata
     from backend.app.db.session import Base, engine
 
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("Synchronized database schema tables successfully")
+        table_names = list(Base.metadata.tables.keys())
+        logger.info(f"Synchronized {len(table_names)} database schema tables: {table_names}")
+
+        if "sqlite" not in str(engine.url):
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE profiles ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE profiles ADD COLUMN IF NOT EXISTS full_name VARCHAR(255);"))
     except Exception as exc:
-        logger.error(f"Database schema auto-creation notice: {exc}")
+        logger.error(f"Database schema auto-creation notice: {exc}", exc_info=True)
     yield
     logger.info(f"Shutting down {settings.APP_NAME}")
 
