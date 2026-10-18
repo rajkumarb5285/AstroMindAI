@@ -1,5 +1,12 @@
 # AstroMind AI — Production Vedic Astrology & Grounded AI Platform
 
+[![Live App](https://img.shields.io/badge/Live_App-frontend--steel--nu--90.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://frontend-steel-nu-90.vercel.app)
+[![Backend API](https://img.shields.io/badge/Backend_API-Live_on_Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://astromind-backend.onrender.com/health/live)
+
+- **Live Production Web Application**: [https://frontend-steel-nu-90.vercel.app](https://frontend-steel-nu-90.vercel.app)
+- **Live Production Backend API**: [https://astromind-backend.onrender.com](https://astromind-backend.onrender.com)
+- **Interactive API Documentation (Swagger)**: [https://astromind-backend.onrender.com/docs](https://astromind-backend.onrender.com/docs)
+
 AstroMind AI is a production-ready web application for Vedic astrology (Jyotish) featuring deterministic ephemeris chart calculations, source-grounded AI analysis, tenant isolation with PostgreSQL Row-Level Security (RLS), and defense-in-depth architecture.
 
 ---
