@@ -59,9 +59,11 @@ const GOLDEN_SAMPLES = [
   },
 ];
 
+import { API_BASE_URL } from "@/lib/api";
+
 export function BirthProfileForm({
   onChartCalculated,
-  apiBaseUrl = "http://localhost:8000",
+  apiBaseUrl = API_BASE_URL,
 }: BirthProfileFormProps) {
   // Auth Identity simulation for testing BOLA/IDOR
   const [authRole, setAuthRole] = useState<"user-a" | "user-b" | "anonymous">("user-a");

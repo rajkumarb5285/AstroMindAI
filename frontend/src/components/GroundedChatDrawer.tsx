@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { InterpretationResponse } from "@/types/astrology";
+import { getApiUrl } from "@/lib/api";
 import {
   MessageSquare,
   Sparkles,
@@ -44,7 +45,7 @@ export function GroundedChatDrawer({ chartId, chartOwner }: GroundedChatDrawerPr
 
     try {
       const token = localStorage.getItem("astromind_token") || "test-token-usr_golden_001";
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/charts/${chartId}/interpret`, {
+      const res = await fetch(getApiUrl(`/api/v1/charts/${chartId}/interpret`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

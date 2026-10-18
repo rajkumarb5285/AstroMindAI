@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { CompatibilityResult, KootaScore } from "@/types/astrology";
+import { getApiUrl } from "@/lib/api";
 import {
   Heart,
   Sparkles,
@@ -52,7 +53,7 @@ export function CompatibilityModal({ currentChartId, currentProfileName }: Compa
 
     try {
       const token = localStorage.getItem("astromind_token") || "test-token-usr_golden_001";
-      const res = await fetch("http://127.0.0.1:8000/api/v1/compatibility", {
+      const res = await fetch(getApiUrl("/api/v1/compatibility"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

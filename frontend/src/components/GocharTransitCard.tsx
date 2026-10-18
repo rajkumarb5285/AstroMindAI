@@ -17,6 +17,8 @@ interface GocharTransitCardProps {
   chartId: string;
 }
 
+import { getApiUrl } from "@/lib/api";
+
 export function GocharTransitCard({ chartId }: GocharTransitCardProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export function GocharTransitCard({ chartId }: GocharTransitCardProps) {
       setError(null);
       try {
         const token = localStorage.getItem("astromind_token") || "test-token-usr_golden_001";
-        const res = await fetch(`http://127.0.0.1:8000/api/v1/charts/${chartId}/transits`, {
+        const res = await fetch(getApiUrl(`/api/v1/charts/${chartId}/transits`), {
           headers: {
             Authorization: `Bearer ${token}`,
           },

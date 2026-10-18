@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import { Sparkles, Compass } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 
 export function Navbar() {
   const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
 
   useEffect(() => {
-    fetch("http://localhost:8000/health/live")
+    fetch(getApiUrl("/health/live"))
       .then((res) => {
         if (res.ok) setBackendStatus("online");
         else setBackendStatus("offline");

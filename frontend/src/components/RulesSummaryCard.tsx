@@ -21,6 +21,8 @@ interface RulesSummaryCardProps {
   chartId: string;
 }
 
+import { getApiUrl } from "@/lib/api";
+
 export function RulesSummaryCard({ chartId }: RulesSummaryCardProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function RulesSummaryCard({ chartId }: RulesSummaryCardProps) {
       setError(null);
       try {
         const token = localStorage.getItem("astromind_token") || "test-token-usr_golden_001";
-        const res = await fetch(`http://127.0.0.1:8000/api/v1/charts/${chartId}/rules`, {
+        const res = await fetch(getApiUrl(`/api/v1/charts/${chartId}/rules`), {
           headers: {
             Authorization: `Bearer ${token}`,
           },

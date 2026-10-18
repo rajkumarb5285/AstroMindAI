@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Download, Loader2, FileCheck, AlertCircle } from "lucide-react";
 import { ReportJobResponse } from "@/types/astrology";
+import { getApiUrl } from "@/lib/api";
 
 interface PdfReportDownloadButtonProps {
   chartId: string;
@@ -23,7 +24,7 @@ export function PdfReportDownloadButton({ chartId, chartName }: PdfReportDownloa
       const token = localStorage.getItem("astromind_token") || "test-token-usr_golden_001";
 
       // 1. Trigger report generation
-      const genRes = await fetch(`http://127.0.0.1:8000/api/v1/charts/${chartId}/reports`, {
+      const genRes = await fetch(getApiUrl(`/api/v1/charts/${chartId}/reports`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -40,11 +41,13 @@ export function PdfReportDownloadButton({ chartId, chartName }: PdfReportDownloa
 
       const reportJob: ReportJobResponse = await genRes.json();
 
-      // 2. Fetch binary PDF using token
-      const dlRes = await fetch(`http://127.0.0.1:8000${reportJob.download_url}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      // 2. Fetch binary PDF using token or presigned S3 URL
+      const isS3Presigned = reportJob.download_url.startsWith("http://") || reportJob.download_url.startsWith("https://");
+      const downloadTarget = isS3Presigned ? reportJob.download_url : getApiUrl(reportJob.download_url);
+      const downloadHeaders: Record<string, string> = isS3Presigned ? {} : { Authorization: `Bearer ${token}` };
+
+      const dlRes = await fetch(downloadTarget, {
+        headers: downloadHeaders,
       });
 
       if (!dlRes.ok) {

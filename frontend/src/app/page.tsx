@@ -1,6 +1,7 @@
 import React from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { getApiUrl } from "@/lib/api";
 import {
   Compass,
   Shield,
@@ -268,7 +269,7 @@ export default function HomePage() {
 
                 <div className="pt-2">
                   <a
-                    href="http://localhost:8000/health/live"
+                    href={getApiUrl("/health/live")}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full inline-flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-surface-card hover:bg-surface-border/60 text-slate-200 text-xs font-mono transition-colors border border-surface-border"
