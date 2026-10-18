@@ -80,16 +80,22 @@ class AIInterpretationOrchestrator:
             logger.warning(f"Error searching knowledge for {question}: {err}")
 
         # 2. Extract structured astrological significations
+        from datetime import datetime
+
         asc = facts.get("ascendant", {})
         asc_sign = asc.get("sign", "Aries")
         asc_deg = asc.get("degree", 0.0)
         planets = facts.get("planets", [])
         yogas = rules.get("yogas", [])
+        active_timing = facts.get("active_timing", {})
 
         # Identify key house occupants
+        h1_planets = [f"{p['planet']} ({p['sign']})" for p in planets if p.get("house") == 1]
+        h2_planets = [f"{p['planet']} ({p['sign']})" for p in planets if p.get("house") == 2]
+        h6_planets = [f"{p['planet']} ({p['sign']})" for p in planets if p.get("house") == 6]
         h7_planets = [f"{p['planet']} ({p['sign']})" for p in planets if p.get("house") == 7]
         h10_planets = [f"{p['planet']} ({p['sign']})" for p in planets if p.get("house") == 10]
-        h1_planets = [f"{p['planet']} ({p['sign']})" for p in planets if p.get("house") == 1]
+        h11_planets = [f"{p['planet']} ({p['sign']})" for p in planets if p.get("house") == 11]
 
         # Format clean, human-readable verified astrological context
         planet_lines = [
@@ -103,24 +109,68 @@ class AIInterpretationOrchestrator:
             for c in retrieved_citations[:2]
         ]
 
+        # Extract active real-time dasha timeline
+        today_date = active_timing.get("today", datetime.utcnow().strftime("%Y-%m-%d"))
+        try:
+            today_obj = datetime.strptime(today_date, "%Y-%m-%d")
+            current_date_str = today_obj.strftime("%B %d, %Y")
+            current_year = today_obj.year
+        except Exception:
+            current_date_str = "October 2026"
+            current_year = 2026
+
+        cur_maha = active_timing.get("current_mahadasha") or {}
+        cur_antar = active_timing.get("current_antardasha") or {}
+        prev_antar = active_timing.get("previous_antardasha") or {}
+        next_antar = active_timing.get("next_antardasha") or {}
+
+        maha_desc = f"{cur_maha.get('lord')} Mahadasha (active {cur_maha.get('start')} to {cur_maha.get('end')})" if cur_maha.get('lord') else "Active Mahadasha verified in chart"
+        antar_desc = f"{cur_antar.get('lord')} Antardasha (active {cur_antar.get('start')} to {cur_antar.get('end')})" if cur_antar.get('lord') else "Active Sub-period verified in chart"
+        prev_desc = f"{prev_antar.get('lord')} Antardasha (ended {prev_antar.get('end')})" if prev_antar.get('lord') else "Previous sub-period"
+        next_desc = f"{next_antar.get('lord')} Antardasha (commences {next_antar.get('start')} to {next_antar.get('end')})" if next_antar.get('lord') else "Upcoming sub-period"
+        next_lord_name = next_antar.get('lord') or 'the upcoming sub-period'
+        cur_antar_lord = cur_antar.get('lord') or 'active benefic'
+
         prompt_body = f"""Client's Life Inquiry: "{question}"
 
-Verified Astronomical Calculations (Chart ID: {chart_id}):
+================ REAL-TIME ASTROLOGICAL & TIMING CONTEXT ================
+- TODAY'S REAL-WORLD DATE: {current_date_str} (Year {current_year})
+- Currently Running Mahadasha: {maha_desc}
+- Currently Running Antardasha (Sub-Period): {antar_desc}
+- Immediate Previous Sub-Period: {prev_desc}
+- Next Upcoming Sub-Period: {next_desc}
+
+Verified Astronomical Placements (Chart ID: {chart_id}):
 - Ascendant (Lagna): {asc_sign} ({asc_deg:.1f}°)
 - Planetary Placements:
 {chr(10).join(planet_lines)}
 - 1st House (Self & Vitality): {'Occupied by ' + ', '.join(h1_planets) if h1_planets else 'Governed by Lagna Lord'}
-- 7th House (Marriage & Partnership): {'Occupied by ' + ', '.join(h7_planets) if h7_planets else 'No occupying planets, governed by 7th Lord'}
-- 10th House (Career, Karma & Status): {'Occupied by ' + ', '.join(h10_planets) if h10_planets else 'Governed by 10th Lord'}
+- 2nd House (Accumulated Wealth & Income): {'Occupied by ' + ', '.join(h2_planets) if h2_planets else 'Governed by 2nd Lord'}
+- 6th House (Service, Daily Employment & Competitive Clearing): {'Occupied by ' + ', '.join(h6_planets) if h6_planets else 'Governed by 6th Lord'}
+- 7th House (Marriage & Partnership): {'Occupied by ' + ', '.join(h7_planets) if h7_planets else 'Governed by 7th Lord'}
+- 10th House (Career, Karma & Professional Status): {'Occupied by ' + ', '.join(h10_planets) if h10_planets else 'Governed by 10th Lord'}
+- 11th House (Income, Gains & Salary/Compensation): {'Occupied by ' + ', '.join(h11_planets) if h11_planets else 'Governed by 11th Lord'}
 - Classical Yogas Detected: {', '.join(yoga_names) if yoga_names else 'Standard auspicious planetary combinations'}
 
 Classical Vedic Wisdom from Shastras:
 {chr(10).join(scripture_excerpts) if scripture_excerpts else '- Classical Parashari Jyotish guidelines apply.'}
 
-As Acharya Shastri (30+ years experience), answer this client with warmth, directness, and compassion:
-1. Address the question directly first in easy-to-understand human language. If marriage/career, pinpoint the favorable timing windows clearly.
-2. Explain partner/career traits in simple, engaging terms (no raw decimals or technical confusion).
-3. Provide 2-3 practical, authentic Vedic remedies (Upayas) to remove obstacles and bring peace.
+================ MANDATORY CONSULTATION INSTRUCTIONS ================
+As Acharya Shastri (30+ years master experience), answer this client with absolute truth, compassion, and accuracy:
+1. STRICT REAL-TIME CHRONOLOGY:
+   - Today's date is {current_date_str}. NEVER give past dates (such as 2024 or early 2025). Any event timing for a job, marriage, or finance must be in the FUTURE relative to {current_date_str}.
+   - You MUST explicitly cite their ACTUAL verified Dasha periods: {maha_desc} and {antar_desc}. Do NOT invent or guess different Dasha lords.
+   - Note astronomical truths: The Sun and Moon NEVER go retrograde.
+
+2. CAREER & PAID IT JOB GUIDANCE (IF APPLICABLE):
+   - If the client is struggling with unpaid internships or looking for a PAID IT/Tech role:
+     * Acknowledge their past struggle with empathy: explain that the previous sub-period ({prev_desc}) was a karmic testing phase of skill incubation without immediate reward.
+     * Pinpoint the exact realistic window for landing a PAID role within the active {cur_antar_lord} sub-period and transition into {next_lord_name}.
+     * Detail the IT/tech significators in their chart: Mercury (logic/coding), Rahu (software/cloud/AI/MNCs), Saturn (backend engineering/persistence).
+     * Recommend the specific technical domain matching their strongest planets.
+
+3. ACTIONABLE VEDIC REMEDIES (UPAYAS):
+   - Provide 2-3 specific, authentic Vedic remedies to remove career/relationship roadblocks (e.g., Budha Beej Mantra on Wednesdays, feeding birds/cows, offering water to the rising Sun, or lighting a mustard oil lamp on Saturdays).
 """
 
         messages: list[dict[str, Any]] = [

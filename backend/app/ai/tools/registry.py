@@ -113,9 +113,75 @@ class SecureAIToolExecutor:
                     "start": d.get("start_date"),
                     "end": d.get("end_date"),
                     "duration_years": d.get("duration_years"),
+                    "sub_periods": [
+                        {
+                            "lord": s.get("lord"),
+                            "start": s.get("start_date"),
+                            "end": s.get("end_date"),
+                            "duration_years": s.get("duration_years"),
+                        }
+                        for s in d.get("sub_periods", [])
+                    ],
                 }
                 for d in calc.get("vimshottari_dashas", [])
             ],
+            "active_timing": self._calculate_active_timing(calc.get("vimshottari_dashas", [])),
+        }
+
+    def _calculate_active_timing(self, all_dashas: list[dict]) -> dict[str, Any]:
+        from datetime import datetime
+
+        today_str = datetime.utcnow().strftime("%Y-%m-%d")
+        active_maha = None
+        active_antar = None
+        prev_antar = None
+        next_antar = None
+
+        for d_idx, d in enumerate(all_dashas):
+            if d.get("start_date") <= today_str <= d.get("end_date"):
+                active_maha = {
+                    "lord": d.get("lord"),
+                    "start": d.get("start_date"),
+                    "end": d.get("end_date"),
+                }
+                subs = d.get("sub_periods", [])
+                for s_idx, s in enumerate(subs):
+                    if s.get("start_date") <= today_str <= s.get("end_date"):
+                        active_antar = {
+                            "lord": s.get("lord"),
+                            "start": s.get("start_date"),
+                            "end": s.get("end_date"),
+                        }
+                        if s_idx > 0:
+                            prev_antar = {
+                                "lord": subs[s_idx - 1].get("lord"),
+                                "start": subs[s_idx - 1].get("start_date"),
+                                "end": subs[s_idx - 1].get("end_date"),
+                            }
+                        if s_idx + 1 < len(subs):
+                            next_antar = {
+                                "lord": subs[s_idx + 1].get("lord"),
+                                "start": subs[s_idx + 1].get("start_date"),
+                                "end": subs[s_idx + 1].get("end_date"),
+                            }
+                        elif d_idx + 1 < len(all_dashas):
+                            nxt_m = all_dashas[d_idx + 1]
+                            nxt_subs = nxt_m.get("sub_periods", [])
+                            if nxt_subs:
+                                next_antar = {
+                                    "lord": nxt_subs[0].get("lord"),
+                                    "start": nxt_subs[0].get("start_date"),
+                                    "end": nxt_subs[0].get("end_date"),
+                                }
+                        break
+                break
+
+        return {
+            "today": today_str,
+            "current_mahadasha": active_maha,
+            "current_antardasha": active_antar,
+            "previous_antardasha": prev_antar,
+            "next_antardasha": next_antar,
         }
 
     def _evaluate_astrology_rules(self, args: dict[str, Any]) -> dict[str, Any]:
